@@ -8,7 +8,15 @@ import (
     "strings"
     "database/sql"
     _ "github.com/go-sql-driver/mysql"
+    "encoding/json"
 )
+
+type Task struct {
+    UserId int      `json:"userid"`
+    Title string     `json:"title"`
+    Begin int    `json:"begin"`
+    End int      `json:"end"`
+}
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
     r.ParseForm()       //urlが渡すオプションを解析します。POSTに対してはレスポンスパケットのボディを解析します（request body）
@@ -62,49 +70,25 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
             panic(insertErr.Error())
         }
 
-    }
-
-    data := struct {
-  		  Body string
-        Entered string
-  	}{
-  		  Body: "Time-logger",
-        Entered: res,
-  	}
-
-    const tpl = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Time Logger</title>
-      </head>
-      <body>
-        <h1>Time Logger</h1>
-          <form action="/mainPage" method="post">
-            <input placeholder="やることを入力" name="doing_thing" type="text"></input>
-            <button type="submit">はじめる！</button>
-            {{.Body}}
-            {{.Entered}}
-          </form>
-      </body>
-      <script>
-      window.onload = function () {
-
-
-      }
-      </script>
-    </html>`
-    check := func(err error) {
-  		  if err != nil {
-  		      log.Fatal(err)
+        task := Task{
+            UserId: 1,
+            Title: res,
+            Begin: 201610102345,
+            End: 201610110010,
         }
-  	}
-  	t, err := template.New("webpage").Parse(tpl)
-  	check(err)
 
-    err = t.Execute(w, data)
-	  check(err)
+        jsonBytes, err := json.Marshal(task)
+        if err != nil {
+            fmt.Println("JSON Marshal error:", err)
+            return
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        fmt.Fprint(w, string(jsonBytes))
+
+        //json.NewEncoder(w).Encode(task)
+    }
+    fmt.Println("きた")
 }
 
 func main() {
