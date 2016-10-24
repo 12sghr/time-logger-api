@@ -6,6 +6,8 @@ import (
     "log"
     "net/http"
     "strings"
+    "database/sql"
+    _ "github.com/go-sql-driver/mysql"
 )
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
@@ -37,19 +39,53 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 func mainPage(w http.ResponseWriter, r*http.Request) {
     fmt.Println("method:", r.Method)
+
+    var res string
+
+    if r.Method == "POST" {
+        // templates.WritePageTemplate(w)
+        r.ParseForm()
+        fmt.Println("入力された値: ", r.Form["doing_thing"])
+        res = r.Form["doing_thing"][0]
+        fmt.Println(res)
+        db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
+        if err != nil {
+            panic(err.Error())
+        }
+
+        defer db.Close() // 関数がリターンする直前に呼び出される
+        i := 3
+        t := 201610302254
+        //e := 201610302300
+        _, insertErr := db.Exec("INSERT INTO tasks (user_id, title, begin) VALUES (?, ?, ?);", i, res, t) //
+        if insertErr != nil {
+            panic(insertErr.Error())
+        }
+
+    }
+
+    data := struct {
+  		  Body string
+        Entered string
+  	}{
+  		  Body: "Time-logger",
+        Entered: res,
+  	}
+
     const tpl = `
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Application Logger</title>
+        <title>Time Logger</title>
       </head>
       <body>
-        <h1>Application Logger</h1>
+        <h1>Time Logger</h1>
           <form action="/mainPage" method="post">
-            <input placeholder="やっていることを入力" name="doing_thing" type="text"></input>
-            <button type="submit">やる</button>
+            <input placeholder="やることを入力" name="doing_thing" type="text"></input>
+            <button type="submit">はじめる！</button>
             {{.Body}}
+            {{.Entered}}
           </form>
       </body>
       <script>
@@ -60,25 +96,15 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
       </script>
     </html>`
     check := func(err error) {
-  		if err != nil {
-  			log.Fatal(err)
-  		}
+  		  if err != nil {
+  		      log.Fatal(err)
+        }
   	}
   	t, err := template.New("webpage").Parse(tpl)
   	check(err)
 
-    data := struct {
-  		Body string
-  	}{
-  		Body: "Time-logger",
-  	}
-
     err = t.Execute(w, data)
 	  check(err)
-
-    if r.Method == "GET" {
-        // templates.WritePageTemplate(w)
-    }
 }
 
 func main() {
