@@ -21,6 +21,8 @@ type Task struct {
 type DisplayTask struct {
   Title string    `json:"title"`
   Begin int       `json:"begin"`
+  End int          `json:"end"`
+  TaskId int      `json:"taskId"`
 }
 
 type DisplayTasks []DisplayTask
@@ -105,7 +107,7 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
 
         userId := 3
 
-        rows, qerr := db.Query("SELECT title, begin FROM tasks WHERE user_id = ?", userId)
+        rows, qerr := db.Query("SELECT title, begin, end, task_id FROM tasks WHERE user_id = ? ORDER BY task_id DESC", userId)
         // db.Query("SELECT * FROM user ",nil)はダメだった。
         defer rows.Close()
         if qerr != nil {
@@ -117,35 +119,61 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
         for rows.Next() {
             var title string
             var begin int
-            if berr := rows.Scan(&title, &begin); berr != nil {
+            var end int
+            var taskId int
+            if berr := rows.Scan(&title, &begin, &end, &taskId); berr != nil {
                 log.Fatal("scan error: %v", berr)
             }
             displayTask := DisplayTask{
                 Title: title,
                 Begin: begin,
+                End: end,
+                TaskId: taskId,
             }
             displayTasks = append(displayTasks, displayTask)
 
 
         }
-          fmt.Println(displayTasks)
-          jsonBytes, err := json.Marshal(displayTasks)
-          if err != nil {
-              fmt.Println("JSON Marshal error:", err)
-              return
-          }
+        fmt.Println(displayTasks)
+        jsonBytes, err := json.Marshal(displayTasks)
+        if err != nil {
+            fmt.Println("JSON Marshal error:", err)
+            return
+        }
 
-          w.Header().Set("Content-Type", "application/json")
-          fmt.Fprint(w, string(jsonBytes))
-
+        w.Header().Set("Content-Type", "application/json")
+        fmt.Fprint(w, string(jsonBytes))
     }
     fmt.Println("きた")
+}
+
+func mainEnd(w http.ResponseWriter, r*http.Request) {
+    db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
+    if err != nil {
+        panic(err.Error())
+    }
+
+    defer db.Close() // 関数がリターンする直前に呼び出される
+
+    r.ParseForm()
+    taskId := r.Form["task_id"][0]
+
+    time := 201612302222
+
+    _, updateErr := db.Exec("UPDATE tasks SET end = ? WHERE task_id = ?", time, taskId) //
+    if updateErr != nil {
+        panic(updateErr.Error())
+    }
+
+    return
+
 }
 
 func main() {
     http.HandleFunc("/", sayhelloName)       //アクセスのルーティングを設定します
     http.HandleFunc("/login", login)         //アクセスのルーティングを設定します
     http.HandleFunc("/mainPage", mainPage)
+    http.HandleFunc("/mainPage/end", mainEnd)
     err := http.ListenAndServe(":9090", nil) //監視するポートを設定します
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
