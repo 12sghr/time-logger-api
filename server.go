@@ -18,6 +18,13 @@ type Task struct {
     End int      `json:"end"`
 }
 
+type DisplayTask struct {
+  Title string    `json:"title"`
+  Begin int       `json:"begin"`
+}
+
+type DisplayTasks []DisplayTask
+
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
     r.ParseForm()       //urlが渡すオプションを解析します。POSTに対してはレスポンスパケットのボディを解析します（request body）
     //注意：もしParseFormメソッドがコールされなければ、以下でフォームのデータを取得することができません。
@@ -62,6 +69,7 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
         }
 
         defer db.Close() // 関数がリターンする直前に呼び出される
+
         i := 3
         t := 201610302254
         //e := 201610302300
@@ -87,6 +95,49 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
         fmt.Fprint(w, string(jsonBytes))
 
         //json.NewEncoder(w).Encode(task)
+    } else {
+        db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
+        if err != nil {
+            panic(err.Error())
+        }
+
+        defer db.Close() // 関数がリターンする直前に呼び出される
+
+        userId := 3
+
+        rows, qerr := db.Query("SELECT title, begin FROM tasks WHERE user_id = ?", userId)
+        // db.Query("SELECT * FROM user ",nil)はダメだった。
+        defer rows.Close()
+        if qerr != nil {
+            log.Fatal("query error: %v", qerr)
+        }
+
+        var displayTasks DisplayTasks
+
+        for rows.Next() {
+            var title string
+            var begin int
+            if berr := rows.Scan(&title, &begin); berr != nil {
+                log.Fatal("scan error: %v", berr)
+            }
+            displayTask := DisplayTask{
+                Title: title,
+                Begin: begin,
+            }
+            displayTasks = append(displayTasks, displayTask)
+
+
+        }
+          fmt.Println(displayTasks)
+          jsonBytes, err := json.Marshal(displayTasks)
+          if err != nil {
+              fmt.Println("JSON Marshal error:", err)
+              return
+          }
+
+          w.Header().Set("Content-Type", "application/json")
+          fmt.Fprint(w, string(jsonBytes))
+
     }
     fmt.Println("きた")
 }
