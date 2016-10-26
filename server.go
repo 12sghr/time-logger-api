@@ -9,6 +9,9 @@ import (
     "database/sql"
     _ "github.com/go-sql-driver/mysql"
     "encoding/json"
+    "time"
+    "strconv"
+    "reflect"
 )
 
 type Task struct {
@@ -23,6 +26,7 @@ type DisplayTask struct {
   Begin int       `json:"begin"`
   End int          `json:"end"`
   TaskId int      `json:"taskId"`
+  Long int        `json:"long"`
 }
 
 type DisplayTasks []DisplayTask
@@ -60,6 +64,8 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
     var res string
 
     if r.Method == "POST" {
+        fmt.Println("POST mainPage")
+
         // templates.WritePageTemplate(w)
         r.ParseForm()
         fmt.Println("入力された値: ", r.Form["doing_thing"])
@@ -73,31 +79,35 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
         defer db.Close() // 関数がリターンする直前に呼び出される
 
         i := 3
-        t := 201610302254
+        t := time.Now()
+        beginTime := t.Format("200601021504")
         //e := 201610302300
-        _, insertErr := db.Exec("INSERT INTO tasks (user_id, title, begin) VALUES (?, ?, ?);", i, res, t) //
+        _, insertErr := db.Exec("INSERT INTO tasks (user_id, title, begin) VALUES (?, ?, ?);", i, res, beginTime) //
         if insertErr != nil {
             panic(insertErr.Error())
         }
 
-        task := Task{
-            UserId: 1,
-            Title: res,
-            Begin: 201610102345,
-            End: 201610110010,
-        }
-
-        jsonBytes, err := json.Marshal(task)
-        if err != nil {
-            fmt.Println("JSON Marshal error:", err)
-            return
-        }
-
-        w.Header().Set("Content-Type", "application/json")
-        fmt.Fprint(w, string(jsonBytes))
+        // task := Task{
+        //     UserId: 1,
+        //     Title: res,
+        //     Begin: 201610102345,
+        //     End: 201610110010,
+        // }
+        // fmt.Println(task)
+        //
+        // jsonBytes, err := json.Marshal(task)
+        // if err != nil {
+        //     fmt.Println("JSON Marshal error:", err)
+        //     return
+        // }
+        //
+        // w.Header().Set("Content-Type", "application/json")
+        // fmt.Fprint(w, string(jsonBytes))
 
         //json.NewEncoder(w).Encode(task)
     } else {
+        fmt.Println("GET mainPage")
+
         db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
         if err != nil {
             panic(err.Error())
@@ -107,7 +117,7 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
 
         userId := 3
 
-        rows, qerr := db.Query("SELECT title, begin, end, task_id FROM tasks WHERE user_id = ? ORDER BY task_id DESC", userId)
+        rows, qerr := db.Query("SELECT title, begin, end, task_id, `long` FROM tasks WHERE user_id = ? ORDER BY task_id DESC", userId)
         // db.Query("SELECT * FROM user ",nil)はダメだった。
         defer rows.Close()
         if qerr != nil {
@@ -121,7 +131,8 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
             var begin int
             var end int
             var taskId int
-            if berr := rows.Scan(&title, &begin, &end, &taskId); berr != nil {
+            var long int
+            if berr := rows.Scan(&title, &begin, &end, &taskId, &long); berr != nil {
                 log.Fatal("scan error: %v", berr)
             }
             displayTask := DisplayTask{
@@ -129,6 +140,7 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
                 Begin: begin,
                 End: end,
                 TaskId: taskId,
+                Long: long,
             }
             displayTasks = append(displayTasks, displayTask)
 
@@ -148,6 +160,8 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
 }
 
 func mainEnd(w http.ResponseWriter, r*http.Request) {
+    fmt.Println("method:", r.Method)
+    fmt.Println("POST mainEnd")
     db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
     if err != nil {
         panic(err.Error())
@@ -156,11 +170,42 @@ func mainEnd(w http.ResponseWriter, r*http.Request) {
     defer db.Close() // 関数がリターンする直前に呼び出される
 
     r.ParseForm()
-    taskId := r.Form["task_id"][0]
+    var taskIdStr = r.Form["task_id"][0]
+    taskId, _ := strconv.Atoi(taskIdStr)
 
-    time := 201612302222
 
-    _, updateErr := db.Exec("UPDATE tasks SET end = ? WHERE task_id = ?", time, taskId) //
+    t := time.Now()
+    endTime := t.Format("200601021504")
+    fmt.Println(reflect.TypeOf(endTime))
+
+    rows, qerr := db.Query("SELECT begin FROM tasks WHERE task_id = ?", taskId)
+    // db.Query("SELECT * FROM user ",nil)はダメだった。
+    if qerr != nil {
+        log.Fatal("query error: %v", qerr)
+    }
+
+    var begin string
+    for rows.Next() {
+        if berr := rows.Scan(&begin); berr != nil {
+            log.Fatal("scan error: %v", berr)
+        }
+    }
+
+    fmt.Println(begin)
+
+    var timeformat = "200601021504"
+    beginT, _ := time.Parse(timeformat, begin)
+    endT, _ := time.Parse(timeformat, endTime)
+    fmt.Println(beginT)
+    fmt.Println(endT)
+    fmt.Println(endT.Sub(beginT))
+    duration := endT.Sub(beginT)
+    long := int(duration.Minutes()) % 60
+    fmt.Println(reflect.TypeOf(long))
+
+
+    _, updateErr := db.Exec("UPDATE tasks SET `end` = ?, `long` = ? WHERE task_id = ?", endTime, long, taskId) //
+    //_, updateErr := db.Exec("UPDATE tasks SET end = ? WHERE task_id = ?", endTime, taskId) //
     if updateErr != nil {
         panic(updateErr.Error())
     }
