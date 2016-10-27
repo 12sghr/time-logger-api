@@ -22,11 +22,13 @@ type Task struct {
 }
 
 type DisplayTask struct {
-  Title string    `json:"title"`
-  Begin int       `json:"begin"`
-  End int          `json:"end"`
-  TaskId int      `json:"taskId"`
-  Long int        `json:"long"`
+  Title string        `json:"title"`
+  Begin int           `json:"begin"`
+  End int              `json:"end"`
+  TaskId int          `json:"taskId"`
+  LongDays int      `json:"longDays"`
+  LongHours int     `json:"longHours"`
+  LongMinutes int  `json:"longMinutes"`
 }
 
 type DisplayTasks []DisplayTask
@@ -117,7 +119,7 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
 
         userId := 3
 
-        rows, qerr := db.Query("SELECT title, begin, end, task_id, `long` FROM tasks WHERE user_id = ? ORDER BY task_id DESC", userId)
+        rows, qerr := db.Query("SELECT title, begin, end, task_id, `longDays`, `longHours`, `longMinutes` FROM tasks WHERE user_id = ? ORDER BY task_id DESC", userId)
         // db.Query("SELECT * FROM user ",nil)はダメだった。
         defer rows.Close()
         if qerr != nil {
@@ -131,8 +133,10 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
             var begin int
             var end int
             var taskId int
-            var long int
-            if berr := rows.Scan(&title, &begin, &end, &taskId, &long); berr != nil {
+            var longDays int
+            var longHours int
+            var longMinutes int
+            if berr := rows.Scan(&title, &begin, &end, &taskId, &longDays, &longHours, &longMinutes); berr != nil {
                 log.Fatal("scan error: %v", berr)
             }
             displayTask := DisplayTask{
@@ -140,7 +144,9 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
                 Begin: begin,
                 End: end,
                 TaskId: taskId,
-                Long: long,
+                LongDays: longDays,
+                LongHours: longHours,
+                LongMinutes: longMinutes,
             }
             displayTasks = append(displayTasks, displayTask)
 
@@ -200,11 +206,13 @@ func mainEnd(w http.ResponseWriter, r*http.Request) {
     fmt.Println(endT)
     fmt.Println(endT.Sub(beginT))
     duration := endT.Sub(beginT)
-    long := int(duration.Minutes()) % 60
-    fmt.Println(reflect.TypeOf(long))
+    hours0 := int(duration.Hours())
+    longDays := hours0 / 24
+    longHours := hours0 % 24
+    longMinutes := int(duration.Minutes()) % 60
 
 
-    _, updateErr := db.Exec("UPDATE tasks SET `end` = ?, `long` = ? WHERE task_id = ?", endTime, long, taskId) //
+    _, updateErr := db.Exec("UPDATE tasks SET `end` = ?, `longDays` = ?, `longHours` = ?, `longMinutes` = ? WHERE task_id = ?", endTime, longDays, longHours, longMinutes, taskId) //
     //_, updateErr := db.Exec("UPDATE tasks SET end = ? WHERE task_id = ?", endTime, taskId) //
     if updateErr != nil {
         panic(updateErr.Error())
