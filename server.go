@@ -12,6 +12,10 @@ import (
     "time"
     "strconv"
     "reflect"
+    "encoding/hex"
+    "golang.org/x/crypto/scrypt"
+    "encoding/binary"
+    "crypto/rand"
 )
 
 // type Task struct {
@@ -59,6 +63,69 @@ type DisplayTasks []DisplayTask
 //         fmt.Println("password:", r.Form["password"])
 //     }
 // }
+
+func createAccount(w http.ResponseWriter, r*http.Request) {
+    fmt.Println("method:", r.Method)
+
+    if r.Method == "GET" {
+        fmt.Println("GET createAccount")
+
+
+    } else {
+        fmt.Println("POST createAccount")
+        r.ParseForm()
+
+        userName := r.Form["user_name"][0]
+        password := r.Form["password"][0]
+
+        hashedPassword, salt := hashPassword(password)
+
+        db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
+        if err != nil {
+            panic(err.Error())
+        }
+
+        defer db.Close() // 関数がリターンする直前に呼び出される
+
+        _, insertErr := db.Exec("INSERT INTO `users` (`name`, `hash`, `salt`) VALUES (?, ?, ?);", userName, hashedPassword, salt) //
+        if insertErr != nil {
+            panic(insertErr.Error())
+        }
+
+
+    }
+}
+
+func login(w http.ResponseWriter, r*http.Request) {
+    fmt.Println("method:", r.Method)
+
+    if r.Method == "GET" {
+        fmt.Println("GET login")
+
+
+    } else {
+        fmt.Println("POST login")
+        r.ParseForm()
+
+        //userName := r.Form["user_name"][0]
+
+
+    }
+}
+
+func hashPassword(pass string) (string, string) {
+    salt := random()
+    fmt.Println(salt)
+    byteSalt := []byte(salt)
+    converted, _ := scrypt.Key([]byte(pass), byteSalt, 16384, 8, 1, 32)
+    return hex.EncodeToString(converted[:]), salt
+}
+
+func random() string {
+    var n uint64
+    binary.Read(rand.Reader, binary.LittleEndian, &n)
+    return strconv.FormatUint(n, 36)
+}
 
 func mainPage(w http.ResponseWriter, r*http.Request) {
     fmt.Println("method:", r.Method)
@@ -225,6 +292,8 @@ func mainEnd(w http.ResponseWriter, r*http.Request) {
 func main() {
     //http.HandleFunc("/", sayhelloName)       //アクセスのルーティングを設定します
     //http.HandleFunc("/login", login)         //アクセスのルーティングを設定します
+    http.HandleFunc("/createAccount", createAccount)
+    http.HandleFunc("/login", login)
     http.HandleFunc("/mainPage", mainPage)
     http.HandleFunc("/mainPage/end", mainEnd)
     err := http.ListenAndServe(":9090", nil) //監視するポートを設定します
