@@ -1,0 +1,20 @@
+{
+	"ImportPath": "github.com/12sghr/time-logger-api",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v75",
+	"Deps": [
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.2-203-gdbc3fe2",
+			"Rev": "dbc3fe23a4aced10a53834106e288b155d17e2ee"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/pbkdf2",
+			"Rev": "9477e0b78b9ac3d0b03822fd95422e2fe07627cd"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/scrypt",
+			"Rev": "9477e0b78b9ac3d0b03822fd95422e2fe07627cd"
+		}
+	]
+}
