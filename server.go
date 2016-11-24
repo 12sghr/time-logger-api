@@ -5,7 +5,7 @@ import (
     //"html/template"
     "log"
     "net/http"
-    //"strings"
+    "strings"
     "database/sql"
     _ "github.com/go-sql-driver/mysql"
     "encoding/json"
@@ -37,19 +37,19 @@ type DisplayTask struct {
 
 type DisplayTasks []DisplayTask
 
-// func sayhelloName(w http.ResponseWriter, r *http.Request) {
-//     r.ParseForm()       //urlが渡すオプションを解析します。POSTに対してはレスポンスパケットのボディを解析します（request body）
-//     //注意：もしParseFormメソッドがコールされなければ、以下でフォームのデータを取得することができません。
-//     fmt.Println(r.Form) //これらのデータはサーバのプリント情報に出力されます
-//     fmt.Println("path", r.URL.Path)
-//     fmt.Println("scheme", r.URL.Scheme)
-//     fmt.Println(r.Form["url_long"])
-//     for k, v := range r.Form {
-//         fmt.Println("key:", k)
-//         fmt.Println("val:", strings.Join(v, ""))
-//     }
-//     fmt.Fprintf(w, "Hello astaxie!") //ここでwに書き込まれたものがクライアントに出力されます。
-// }
+func sayhelloName(w http.ResponseWriter, r *http.Request) {
+    r.ParseForm()       //urlが渡すオプションを解析します。POSTに対してはレスポンスパケットのボディを解析します（request body）
+    //注意：もしParseFormメソッドがコールされなければ、以下でフォームのデータを取得することができません。
+    fmt.Println(r.Form) //これらのデータはサーバのプリント情報に出力されます
+    fmt.Println("path", r.URL.Path)
+    fmt.Println("scheme", r.URL.Scheme)
+    fmt.Println(r.Form["url_long"])
+    for k, v := range r.Form {
+        fmt.Println("key:", k)
+        fmt.Println("val:", strings.Join(v, ""))
+    }
+    fmt.Fprintf(w, "Hello astaxie!") //ここでwに書き込まれたものがクライアントに出力されます。
+}
 
 // func login(w http.ResponseWriter, r *http.Request) {
 //     fmt.Println("method:", r.Method) //リクエストを取得するメソッド
@@ -290,7 +290,7 @@ func mainEnd(w http.ResponseWriter, r*http.Request) {
 }
 
 func main() {
-    //http.HandleFunc("/", sayhelloName)       //アクセスのルーティングを設定します
+    http.HandleFunc("/", sayhelloName)       //アクセスのルーティングを設定します
     //http.HandleFunc("/login", login)         //アクセスのルーティングを設定します
     http.HandleFunc("/createAccount", createAccount)
     http.HandleFunc("/login", login)
