@@ -16,6 +16,7 @@ import (
     "golang.org/x/crypto/scrypt"
     "encoding/binary"
     "crypto/rand"
+    "os"
 )
 
 // type Task struct {
