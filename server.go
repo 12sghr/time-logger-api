@@ -80,7 +80,7 @@ func createAccount(w http.ResponseWriter, r*http.Request) {
 
         hashedPassword, salt := hashPassword(password)
 
-        db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
+        db, err := sql.Open("mysql", "d1d1d9ba@us-cdbr-iron-east-04.cleardb.net/heroku_2e3348d8916b23d?reconnect=true?interpolateParams=true")
         if err != nil {
             panic(err.Error())
         }
@@ -140,7 +140,7 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
         fmt.Println("入力された値: ", r.Form["doing_thing"])
         res = r.Form["doing_thing"][0]
         fmt.Println(res)
-        db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
+        db, err := sql.Open("mysql", "d1d1d9ba@us-cdbr-iron-east-04.cleardb.net/heroku_2e3348d8916b23d?reconnect=true?interpolateParams=true")
         if err != nil {
             panic(err.Error())
         }
@@ -177,7 +177,7 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
     } else {
         fmt.Println("GET mainPage")
 
-        db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
+        db, err := sql.Open("mysql", "d1d1d9ba@us-cdbr-iron-east-04.cleardb.net/heroku_2e3348d8916b23d?reconnect=true?interpolateParams=true")
         if err != nil {
             panic(err.Error())
         }
@@ -235,7 +235,7 @@ func mainPage(w http.ResponseWriter, r*http.Request) {
 func mainEnd(w http.ResponseWriter, r*http.Request) {
     fmt.Println("method:", r.Method)
     fmt.Println("POST mainEnd")
-    db, err := sql.Open("mysql", "root@tcp(localhost:3306)/time_logger?interpolateParams=true")
+    db, err := sql.Open("mysql", "d1d1d9ba@us-cdbr-iron-east-04.cleardb.net/heroku_2e3348d8916b23d?reconnect=true?interpolateParams=true")
     if err != nil {
         panic(err.Error())
     }
