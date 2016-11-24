@@ -1,1 +1,1 @@
-web: time-logger-api
+web: ./server

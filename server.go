@@ -297,7 +297,8 @@ func main() {
     http.HandleFunc("/login", login)
     http.HandleFunc("/mainPage", mainPage)
     http.HandleFunc("/mainPage/end", mainEnd)
-    err := http.ListenAndServe(os.Getenv("PORT"), nil) //監視するポートを設定します
+    listen := os.Getenv("PORT")
+    err := http.ListenAndServe(listen, nil) //監視するポートを設定します
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
     }
