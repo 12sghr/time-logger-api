@@ -291,6 +291,7 @@ func mainEnd(w http.ResponseWriter, r*http.Request) {
 }
 
 func main() {
+    fmt.Println("Server starting......")
     http.HandleFunc("/", sayhelloName)       //アクセスのルーティングを設定します
     //http.HandleFunc("/login", login)         //アクセスのルーティングを設定します
     http.HandleFunc("/createAccount", createAccount)
@@ -301,7 +302,5 @@ func main() {
     err := http.ListenAndServe(":" + listen, nil) //監視するポートを設定します
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
-    } else {
-        fmt.Println("Server starting......")
     }
 }
