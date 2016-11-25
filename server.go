@@ -301,5 +301,7 @@ func main() {
     err := http.ListenAndServe(":" + listen, nil) //監視するポートを設定します
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
+    } else {
+        fmt.Println("Server starting......")
     }
 }
