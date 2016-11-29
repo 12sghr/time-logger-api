@@ -302,6 +302,7 @@ func main() {
     if listen == "" {
         listen = "9090"
     }
+    fmt.Println("Listening on " + listen + " port")
     err := http.ListenAndServe(":" + listen, nil) //監視するポートを設定します
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
